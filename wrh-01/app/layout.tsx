@@ -31,8 +31,10 @@ const wrhFont = localFont({
 export const metadata: Metadata = {
   title: "The Wireless House",
   description: "The Wireless House Book App",
-  other: { 'apple-mobile-web-app-capable': 'yes' },
-  other: { 'mobile-web-app-capable': 'yes' },
+  other: { 
+    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes'
+  },
 }
 
 export default function RootLayout({
