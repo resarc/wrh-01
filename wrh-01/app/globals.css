@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+  }
+}
+
+body {
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  @apply h-dvh overflow-y-hidden;
+  /* @apply hidden xl:block; */
+}
+
+/* rpv */
+.rpv-core__inner-page-container {
+  /* @apply flex h-screen items-center justify-center relative; */
+}
+
+.rpv-core__inner-page {
+  /* @apply !relative !translate-x-0 !translate-y-0; */
+  @apply !bg-transparent flex !h-dvh items-center justify-center;
+
+  &.rpv-core__inner-page--dual-even {
+    @apply justify-end;
+  }
+  &.rpv-core__inner-page--dual-odd {
+    @apply justify-start;
+  }
+}
+
+.rpv-core__page-layer:after {
+  box-shadow: none !important;
+}
+
+.rpv-bookmark__list {
+  @apply flex flex-col gap-y-4;
+}
+
+.rpv-core__doc-loading {
+  @apply !bg-transparent flex items-center justify-center text-white h-full w-full;
+
+  .progress-bar {
+    @apply flex items-center justify-center;
+    
+    .rpv-core__progress-bar {
+      @apply w-full;
+
+      .rpv-core__progress-bar-progress {
+        @apply !bg-wrh-green;
+      }
+    }
+  }
+}
