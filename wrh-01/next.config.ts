@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     // Custom ESLint configuration inline in next.config.ts
     dirs: ['pages', 'components', 'lib'], // Specify directories to lint
   },
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

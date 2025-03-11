@@ -24,7 +24,7 @@ export default function Home() {
           <Column href="/book/ratchaburi">
             <div className="aspect-[3/4] bg-red-200 h-max w-full">
               <Image
-                src="/pdf/Ratchaburi.jpg"
+                src="https://cdn.sanity.io/images/6lbaze29/production/1f4a8389ed5530e2ef0b981a8467baec8c22d49b-1848x2748.jpg"
                 alt="Ratchaburi"
                 fill
                 priority
@@ -41,7 +41,7 @@ export default function Home() {
           <Column href="/book/souvenir">
             <div className="aspect-[3/4] bg-red-200 h-max w-full">
               <Image
-                src="/pdf/Souvenir.jpg"
+                src="https://cdn.sanity.io/images/6lbaze29/production/eeeaee9c2541c9c238098989a9d6c0beea9cfe3e-2619x3381.jpg"
                 alt="Ratchaburi"
                 fill
                 priority
