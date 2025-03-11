@@ -1,10 +1,11 @@
+import { TypedObject } from '@portabletext/types'
 import CloseButton from '@/app/components/CloseButton'
 import ContentBlock from '@/app/components/ContentBlock'
 
 export default function Panel({
   about, selected, setSelected
 }:{
-  about: React.ReactNode
+  about: TypedObject
   selected: string
   setSelected: any
 }) {

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import type { PageLayout } from '@react-pdf-viewer/core'
+import { TypedObject } from '@portabletext/types'
 import { Icon, Viewer, SpecialZoomLevel, ViewMode, ProgressBar } from '@react-pdf-viewer/core'
 
 import { pageNavigationPlugin, RenderGoToPageProps } from '@react-pdf-viewer/page-navigation'
@@ -32,7 +33,7 @@ export default function Reader({
   file, info
 }:{
   file: string
-  info: React.ReactNode
+  info: TypedObject
 }) {
   const [ selected, setSelected ] = useState<string>('')
 

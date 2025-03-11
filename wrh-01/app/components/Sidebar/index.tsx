@@ -1,4 +1,5 @@
 'use client'
+import { TypedObject } from '@portabletext/types'
 import { useEffect, useRef } from 'react'
 import Button from '@/app/components/Sidebar/Button'
 import About from '@/app/components/Sidebar/About'
@@ -7,7 +8,7 @@ import TOC from '@/app/components/Sidebar/TOC'
 export default function Sidebar({
   about, toc, selected, setSelected
 }:{
-  about: React.ReactNode
+  about: TypedObject
   toc: React.ReactNode
   selected: string
   setSelected: any

@@ -55,7 +55,7 @@ body {
       @apply w-full;
 
       .rpv-core__progress-bar-progress {
-        @apply !bg-wrh-green;
+        @apply !bg-white h-[4px];
       }
     }
   }
