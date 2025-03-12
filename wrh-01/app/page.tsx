@@ -4,7 +4,7 @@ import Label from './components/Label'
 
 export default function Home() {
   return (
-    <div className="hidden xl:grid min-h-screen font-[family-name:var(--font-geist-sans)] text-wrh-green">
+    <div className="hidden md:grid min-h-screen font-[family-name:var(--font-geist-sans)] text-wrh-green">
       <main className="grid grid-rows-[max-content_1fr]">
         {/* Top */}
         {/* <section className="flex items-center justify-center py-6">
