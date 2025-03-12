@@ -17,7 +17,7 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   @apply h-dvh overflow-y-hidden;
-  /* @apply hidden xl:block; */
+  /* @apply hidden 2xl:block; */
 }
 
 /* rpv */
@@ -43,6 +43,11 @@ body {
 
 .rpv-bookmark__list {
   @apply flex flex-col gap-y-4;
+
+  .rpv-bookmark__title {
+    padding-left: 1.2em;
+    text-indent: -1.2em;
+  }
 }
 
 .rpv-core__doc-loading {
@@ -55,7 +60,7 @@ body {
       @apply w-full;
 
       .rpv-core__progress-bar-progress {
-        @apply !bg-white h-[4px];
+        @apply !bg-white h-[2px];
       }
     }
   }

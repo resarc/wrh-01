@@ -4,7 +4,7 @@ import Label from './components/Label'
 
 export default function Home() {
   return (
-    <div className="grid min-h-screen font-[family-name:var(--font-geist-sans)] text-wrh-green">
+    <div className="hidden 2xl:grid min-h-screen font-[family-name:var(--font-geist-sans)] text-wrh-green ">
       <main className="grid grid-rows-[max-content_1fr]">
         {/* Top */}
         {/* <section className="flex items-center justify-center py-6">
@@ -22,7 +22,7 @@ export default function Home() {
         <section className="flex h-dvh overflow-y-hidden">
           {/* Left */}
           <Column href="/book/ratchaburi">
-            <div className="aspect-[3/4] bg-red-200 h-max w-full">
+            <div className="aspect-[3/4] bg-green-900 h-max w-full">
               <Image
                 src="https://cdn.sanity.io/images/6lbaze29/production/1f4a8389ed5530e2ef0b981a8467baec8c22d49b-1848x2748.jpg"
                 alt="Ratchaburi"
@@ -39,7 +39,7 @@ export default function Home() {
           <div className="bg-wrh-green h-full w-[2px]"></div>
           {/* Right */}
           <Column href="/book/souvenir">
-            <div className="aspect-[3/4] bg-red-200 h-max w-full">
+            <div className="aspect-[3/4] bg-green-900 h-max w-full">
               <Image
                 src="https://cdn.sanity.io/images/6lbaze29/production/eeeaee9c2541c9c238098989a9d6c0beea9cfe3e-2619x3381.jpg"
                 alt="Souvenir"
