@@ -16,7 +16,7 @@ export default function Panel({
 
   return(
     <div className={`about absolute bg-wrh-green flex gap-x-4 h-full px-8 py-10 w-full ${onSelected}`}>
-      <div className="w-full">
+      <div className="overflow-y-scroll w-full">
         <ContentBlock data={about} />
       </div>
       <button className="h-fit p-2" onClick={triggerClose} >

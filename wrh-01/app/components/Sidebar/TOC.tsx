@@ -15,7 +15,7 @@ export default function TOC({
 
   return (
     <div className={`bookmark absolute bg-wrh-blue flex gap-x-4 left-0 px-8 py-10 top-0 h-full w-full ${onSelected}`}>
-      <div className="w-full">
+      <div className="overflow-y-scroll w-full">
         {toc}
       </div>
       <button className="h-fit p-2" onClick={triggerClose} >
