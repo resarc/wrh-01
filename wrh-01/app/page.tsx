@@ -42,7 +42,7 @@ export default function Home() {
             <div className="aspect-[3/4] bg-red-200 h-max w-full">
               <Image
                 src="https://cdn.sanity.io/images/6lbaze29/production/eeeaee9c2541c9c238098989a9d6c0beea9cfe3e-2619x3381.jpg"
-                alt="Ratchaburi"
+                alt="Souvenir"
                 fill
                 priority
               />
