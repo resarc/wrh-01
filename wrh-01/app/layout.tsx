@@ -38,6 +38,8 @@ export const metadata: Metadata = {
   },
 }
 
+export const revalidate = 1000
+
 export default function RootLayout({
   children,
 }: Readonly<{
