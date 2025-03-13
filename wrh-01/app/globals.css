@@ -44,9 +44,13 @@ body {
 .rpv-bookmark__list {
   @apply flex flex-col gap-y-4;
 
-  .rpv-bookmark__title {
-    padding-left: 1.2em;
-    text-indent: -1.2em;
+  li {
+    @apply border-b last:border-b-0 border-white pb-4;
+
+    .rpv-bookmark__title {
+      padding-left: 1.8em;
+      text-indent: -1.2em;
+    }
   }
 }
 

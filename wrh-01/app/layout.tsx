@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${wrhFont.className} antialiased text-base`}
+        className={`${wrhFont.className} antialiased bg-black text-base`}
       >
         <div className="bg-black text-white md:hidden h-screen w-screen fixed left-0 top-0 flex items-center justify-center z-50">Display on iPad</div>
         {children}
