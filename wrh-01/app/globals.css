@@ -16,8 +16,31 @@
 body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
-  @apply h-dvh overflow-y-hidden;
+  @apply h-dvh overflow-hidden;
   /* @apply hidden 2xl:block; */
+}
+
+/* wrap images in portabletext - various size, various ratio */
+.image-container {
+  @apply relative w-full;
+
+  > span {
+    position: unset !important;
+  }
+
+  img {
+    object-fit: contain;
+    width: 100% !important;
+    position: relative !important;
+    height: unset !important;
+  }
+}
+/* / wrap images in portabletext - various size, various ratio */
+
+.content-block {
+  .image {
+    @apply w-1/2;
+  }
 }
 
 /* rpv */

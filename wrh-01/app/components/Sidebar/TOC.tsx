@@ -14,11 +14,11 @@ export default function TOC({
   const onSelected = selected == 'toc' ? 'z-20' : ''
 
   return (
-    <div className={`bookmark absolute bg-wrh-blue flex gap-x-4 left-0 px-8 py-10 top-0 h-full w-full ${onSelected}`}>
-      <div className="overflow-y-scroll w-full">
+    <div className={`bookmark absolute bg-wrh-blue flex   h-full w-full ${onSelected}`}>
+      <div className="overflow-y-scroll pb-[10rem] pt-10 pl-8 pr-[6rem] w-full">
         {toc}
       </div>
-      <button className="h-fit p-2" onClick={triggerClose} >
+      <button className="absolute right-[2rem] top-[2.5rem] h-fit p-2" onClick={triggerClose} >
         <CloseButton />
       </button>
     </div>

@@ -15,11 +15,11 @@ export default function Panel({
   const onSelected = selected == 'about' ? 'z-20' : ''
 
   return(
-    <div className={`about absolute bg-wrh-green flex gap-x-4 h-full px-8 py-10 w-full ${onSelected}`}>
-      <div className="overflow-y-scroll w-full">
+    <div className={`about absolute bg-wrh-green flex h-full w-full ${onSelected}`}>
+      <div className="overflow-y-scroll pb-[10rem] pt-10 pl-8 pr-[6rem] w-full">
         <ContentBlock data={about} />
       </div>
-      <button className="h-fit p-2" onClick={triggerClose} >
+      <button className="absolute right-[2rem] top-[2.5rem] h-fit p-2" onClick={triggerClose} >
         <CloseButton />
       </button>
     </div>

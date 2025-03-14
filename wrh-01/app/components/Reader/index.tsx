@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import type { PageLayout } from '@react-pdf-viewer/core'
 import { TypedObject } from '@portabletext/types'
-import { Icon, Viewer, SpecialZoomLevel, ViewMode, ProgressBar } from '@react-pdf-viewer/core'
+import { Worker, Viewer, SpecialZoomLevel, ViewMode, ProgressBar, ScrollMode } from '@react-pdf-viewer/core'
 
 import { pageNavigationPlugin, RenderGoToPageProps } from '@react-pdf-viewer/page-navigation'
 
@@ -16,18 +16,6 @@ import '@react-pdf-viewer/page-navigation/lib/styles/index.css'
 
 import NextButton from '@/app/components/NextButton'
 import Sidebar from '@/app/components/Sidebar'
-
-const ExpandIcon = () => (
-  <Icon size={16}>
-      <path d="M.541,5.627,11.666,18.2a.5.5,0,0,0,.749,0L23.541,5.627" />
-  </Icon>
-);
-
-const CollapseIcon = () => (
-  <Icon size={16}>
-      <path d="M5.651,23.5,18.227,12.374a.5.5,0,0,0,0-.748L5.651.5" />
-  </Icon>
-);
 
 export default function Reader({
   file, info
@@ -56,16 +44,15 @@ export default function Reader({
     setSelected('')
   }
 
-  const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) =>
+  const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) => 
     renderProps.defaultRenderItem(
-        renderProps.onClickItem,
-        <>
-            {renderProps.defaultRenderToggle(<ExpandIcon />, <CollapseIcon />)}
-            {renderProps.defaultRenderTitle(() => {
-              renderProps.onClickTitle()
-              toggleBookmark()
-            })}
-        </>
+      renderProps.onClickItem,
+      <>
+        {renderProps.defaultRenderTitle(() => {
+          renderProps.onClickTitle()
+          toggleBookmark()
+        })}
+      </>
     );
 
   const renderLoader = (percentages: number) => (
@@ -74,27 +61,32 @@ export default function Reader({
     </div>
   )
 
-  // const openLinksPlugin = (): Plugin => {
-  //   const findLinks = (e: PluginOnAnnotationLayerRender) => {
-  //     // Find links
-  //   }
-
-  //   return {
-  //     onAnnotationLayerRender: findLinks,
-  //   }
-  // }
-
   return(
     <div className="relative flex justify-center">
-      <div className="h-screen w-[80vw] overflow-hidden">
+      <div className="reader h-screen w-[80vw] overflow-hidden overflow-x-auto">
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+
         <Viewer 
           fileUrl={file}
           pageLayout={pageLayout}
-          plugins={[bookmarkPluginInstance, disableScrollPluginInstance, pageNavigationPluginInstance]}
+          plugins={[
+            bookmarkPluginInstance, 
+            // disableScrollPluginInstance, 
+            pageNavigationPluginInstance
+          ]}
           defaultScale={SpecialZoomLevel.PageFit}
           viewMode={ViewMode.DualPage}
           renderLoader={renderLoader}
+          scrollMode={ScrollMode.Page}
+          // renderViewer={(props) => (
+          //   <div className="pdf-viewer-container">
+          //     <div style={{ display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
+          //       {props.children}
+          //     </div>
+          //   </div>
+          // )}
         />
+        </Worker>
       </div>
 
       <Sidebar

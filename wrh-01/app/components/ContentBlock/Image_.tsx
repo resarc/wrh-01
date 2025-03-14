@@ -15,7 +15,7 @@ export default function Image_({
   }
 }) {
 	return (
-		<div className="flex flex-col gap-y-1">
+		<div className="image flex flex-col gap-y-1">
       {/* <div className="aspect-[3/2] flex relative"> */}
       {value &&
       <>
