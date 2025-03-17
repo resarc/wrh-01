@@ -48,7 +48,7 @@ body {
 
 /* react-pdf */
 .page-container {
-  @apply flex absolute transition duration-500 w-full;
+  @apply flex absolute transition duration-500 w-1/2;
 
   &.previous {
     @apply right-full;
@@ -60,7 +60,7 @@ body {
     @apply left-full;
   }
   .react-pdf__Page {
-    @apply !bg-black flex items-center !min-w-[unset] w-1/2;
+    @apply !bg-black flex items-center !min-w-[unset] w-full;
 
     &.left {
       @apply justify-end;
