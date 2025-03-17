@@ -68,6 +68,9 @@ body {
     &.right {
       @apply justify-start;
     }
+    & > * {
+      @apply !w-full;
+    }
   }
 }
 

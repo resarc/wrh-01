@@ -89,7 +89,7 @@ export default function Reader({
 
   return(
     <div className="relative flex justify-center">
-      <div className="fixed hidden left-0 top-0 text-white">
+      <div className="fixed left-0 top-0 text-white">
         Current: {pageNumber} / {pageNumber+1}
         pageNumber: {pageNumber} /
         numPage: {numPages} /
@@ -116,7 +116,7 @@ export default function Reader({
                 item >= pageNumber - 2 && item <= pageNumber + 3 &&
                 <div
                   key={index}
-                  className={`page-container ${item === pageNumber ? 'flex' : ''}`}
+                  className={`page-container`}
                   // value={index * spreadWidth}
                   style={{ transform: 'translateX('+ (item-1) * spreadWidth/2 + 'px)' }}
                 >
