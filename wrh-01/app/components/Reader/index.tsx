@@ -32,7 +32,9 @@ export default function Reader({
   const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
 
   useEffect(() => {
-    setSpreadWidth(currentRef.current.offsetWidth)
+    if (currentRef.current) {
+      setSpreadWidth(currentRef.current.offsetWidth)
+    }
   }, [pageWrapperRef.current])
 
   const renderPage = useCallback((pageNum: number) => {
