@@ -69,7 +69,7 @@ body {
       @apply justify-start;
     }
     & > * {
-      @apply !h-full !w-auto object-contain;
+      @apply !h-auto !w-full object-contain;
     }
   }
 }

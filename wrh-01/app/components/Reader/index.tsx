@@ -32,10 +32,18 @@ export default function Reader({
   const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
 
   useEffect(() => {
-    if (currentRef.current) {
-      setSpreadWidth(currentRef.current.offsetWidth)
-    }
-  }, [pageWrapperRef.current])
+    const handleResize = () => {
+      if (currentRef.current) {
+        setSpreadWidth(currentRef.current.offsetWidth)
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [])
 
   const renderPage = useCallback((pageNum: number) => {
     return (
@@ -95,7 +103,7 @@ export default function Reader({
 
   return(
     <div className="relative flex justify-center">
-      <div className="fixed hidden left-0 top-0 text-white">
+      <div className="fixed hidden left-0 top-0 text-white z-50">
         Current: {pageNumber} / {pageNumber+1}
         pageNumber: {pageNumber} /
         numPage: {numPages} /
