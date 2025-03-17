@@ -40,7 +40,7 @@ export default function Reader({
       <Page
         key={pageNum}
         pageNumber={pageNum}
-        width={560}
+        width={700}
         loading={<div className="flex w-1/2"><Loader /></div>}
         className={pageNum === pageNumber ? 'left' : 'right'}
       />
@@ -93,7 +93,7 @@ export default function Reader({
 
   return(
     <div className="relative flex justify-center">
-      <div className="fixed left-0 top-0 text-white">
+      <div className="fixed hidden left-0 top-0 text-white">
         Current: {pageNumber} / {pageNumber+1}
         pageNumber: {pageNumber} /
         numPage: {numPages} /
