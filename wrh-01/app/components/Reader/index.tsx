@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 import { pdfjs, Document, Page, Outline } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
@@ -30,6 +30,10 @@ export default function Reader({
   const [ pageNumber, setPageNumber ] = useState<number>(1)
   const [ transitioning, setTransitioning ] = useState<string>('')
   const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
+
+  useEffect(() => {
+    setSpreadWidth(currentRef.current.offsetWidth)
+  }, [pageWrapperRef.current])
 
   const renderPage = useCallback((pageNum: number) => {
     return (
