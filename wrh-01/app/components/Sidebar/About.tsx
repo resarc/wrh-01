@@ -12,10 +12,10 @@ export default function Panel({
   const triggerClose = () => {
     setSelected('')
   }
-  const onSelected = selected == 'about' ? 'z-20' : ''
+  const onSelected = selected == 'about' ? 'opacity-100' : 'opacity-0'
 
   return(
-    <div className={`about absolute bg-wrh-green flex h-full w-full ${onSelected}`}>
+    <div className={`about absolute bg-wrh-green flex h-full w-full transition duration-700 ${onSelected}`}>
       <div className="overflow-y-scroll pb-[10rem] pt-10 pl-8 pr-[6rem] w-full">
         <ContentBlock data={about} />
       </div>

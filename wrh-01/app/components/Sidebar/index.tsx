@@ -31,8 +31,10 @@ export default function Sidebar({
   })
 
   const translate = selected !== '' ? '' : '-translate-x-full'
+  const covered = selected !== '' ? 'flex' : 'hidden'
 
   return(
+    <>
     <div
       ref={SidebarRef}
       className={`sidebar fixed h-screen left-0 text-white transition duration-300 w-[40vw] z-10 ${translate}`}
@@ -66,5 +68,7 @@ export default function Sidebar({
         setSelected={setSelected}
       />
     </div>
+    <div className={`fixed bg-black opacity-30 transition h-full w-full ${covered}`}></div>
+    </>
   )
 }

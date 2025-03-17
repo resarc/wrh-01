@@ -16,6 +16,9 @@
 body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color: transparent;
+  
   @apply h-dvh overflow-hidden;
   /* @apply hidden 2xl:block; */
 }
@@ -42,6 +45,56 @@ body {
     @apply w-1/2;
   }
 }
+
+/* react-pdf */
+.page-container {
+  @apply flex absolute transition duration-500 w-full;
+
+  &.previous {
+    @apply right-full;
+  }
+  &.current {
+    @apply left-0;
+  }
+  &.next {
+    @apply left-full;
+  }
+  .react-pdf__Page {
+    @apply !bg-black flex items-center !min-w-[unset] w-1/2;
+
+    &.left {
+      @apply justify-end;
+    }
+    &.right {
+      @apply justify-start;
+    }
+  }
+}
+
+.nav-button {
+  &:disabled {
+    @apply hidden;
+  }
+}
+.bookmark {
+  .react-pdf__Outline {
+    li {
+      @apply border-b last:border-b-0 border-white py-4 first:pt-0 pl-[1.8rem] -indent-[1.2rem];
+    } 
+  }
+}
+
+.carousel-wrapper {
+  display: flex;
+  transition: transform 0.5s ease-in-out; /* Smooth transition */
+  will-change: transform;
+  height: 100%;
+  width: 100%;
+}
+.transition-all {
+  transition: transform 0.5s ease-in-out;
+}
+/* / react-pdf */
 
 /* rpv */
 .rpv-core__inner-page-container {

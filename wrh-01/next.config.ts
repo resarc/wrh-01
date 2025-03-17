@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    turbo: {
+      resolveAlias: {
+      canvas: './empty-module.ts',
+      },
+    },
+  },
 };
 
 export default nextConfig;

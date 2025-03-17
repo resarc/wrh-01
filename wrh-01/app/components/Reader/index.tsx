@@ -1,21 +1,17 @@
 'use client'
-import { useState } from 'react'
-import type { PageLayout } from '@react-pdf-viewer/core'
+import { useState, useCallback, useMemo, useRef } from 'react'
+
+import { pdfjs, Document, Page, Outline } from 'react-pdf'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
+
 import { TypedObject } from '@portabletext/types'
-import { Worker, Viewer, SpecialZoomLevel, ViewMode, ProgressBar, ScrollMode } from '@react-pdf-viewer/core'
-
-import { pageNavigationPlugin, RenderGoToPageProps } from '@react-pdf-viewer/page-navigation'
-
-import type { RenderBookmarkItemProps } from '@react-pdf-viewer/bookmark'
-import { bookmarkPlugin } from '@react-pdf-viewer/bookmark'
-
-import disableScrollPlugin from '@/lib/disableScrollPlugin'
-
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/page-navigation/lib/styles/index.css'
 
 import NextButton from '@/app/components/NextButton'
 import Sidebar from '@/app/components/Sidebar'
+import Loader from '@/app/components/Loader'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export default function Reader({
   file, info
@@ -23,147 +19,145 @@ export default function Reader({
   file: string
   info: TypedObject
 }) {
+  const currentRef = useRef<HTMLDivElement>(null)
+  const afterRef = useRef<HTMLDivElement>(null)
+
+  const pageWrapperRef = useRef<HTMLDivElement>(null)
+  const documentRef = useRef<HTMLDivElement>(null)
+
   const [ selected, setSelected ] = useState<string>('')
+  const [ numPages, setNumPages ] = useState<number>(0)
+  const [ pageNumber, setPageNumber ] = useState<number>(1)
+  const [ transitioning, setTransitioning ] = useState<string>('')
+  const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
 
-  const pageNavigationPluginInstance = pageNavigationPlugin()
-  const bookmarkPluginInstance = bookmarkPlugin()
-  const disableScrollPluginInstance = disableScrollPlugin()
+  const renderPage = useCallback((pageNum: number) => {
+    return (
+      <Page
+        key={pageNum}
+        pageNumber={pageNum}
+        width={560}
+        loading={<div className="flex w-1/2"><Loader /></div>}
+        className={pageNum === pageNumber ? 'left' : 'right'}
+      />
+    )
+  }, [pageNumber])
+  
+  const onDocumentLoadSuccess = (pdf: any): void  => {
 
-  const pageLayout: PageLayout = {
-    transformSize: ({ size }) => ({
-        height: screen.height,
-        width: size.width,
-    }),
+    // setSpreadStart([pageNumber, pageNumber+1, pageNumber+2])
+
+    setNumPages(pdf.numPages)
+
+    // setSpreadBefore([pageNumber - 2, pageNumber -1])
+    // setSpreadCurrent(pageNumber)
+    // setSpreadAfter([pageNumber + 6, pageNumber + 8])
+
+    if (currentRef.current) {
+      setSpreadWidth(currentRef.current.offsetWidth)
+    }
   }
 
-  // const { GoToFirstPage, GoToLastPage, GoToNextPage, GoToPreviousPage } = pageNavigationPluginInstance
-  const { GoToNextPage, GoToPreviousPage } = pageNavigationPluginInstance
+  const onPageChange = ( newPageNumber: number, direction : string ) => {
+    if (newPageNumber !== pageNumber) {
+      setTransitioning(direction)
 
-  const { Bookmarks } = bookmarkPluginInstance
-  const toggleBookmark = () => {
-    setSelected('')
+      if (pageWrapperRef.current ) {
+        pageWrapperRef.current.style.transform = `translateX(-${(newPageNumber-1) * (spreadWidth/2)}px)`
+      } 
+
+      setTimeout(() => {
+        setPageNumber(newPageNumber)
+        // setSpreadBefore([newPageNumber - 2, newPageNumber - 1])
+        // setSpreadCurrent(newPageNumber)
+        setTransitioning('')
+      }, 300)
+    }
   }
 
-  const renderBookmarkItem = (renderProps: RenderBookmarkItemProps) => 
-    renderProps.defaultRenderItem(
-      renderProps.onClickItem,
-      <>
-        {renderProps.defaultRenderTitle(() => {
-          renderProps.onClickTitle()
-          toggleBookmark()
-        })}
-      </>
-    );
-
-  const renderLoader = (percentages: number) => (
-    <div className="progress-bar" style={{ width: '240px' }}>
-      <ProgressBar progress={Math.round(percentages)} />
-    </div>
-  )
+  const onClickOutline = ({ 
+    pageIndex, pageNumber 
+  } : {
+    pageIndex: number
+    pageNumber: number
+  }) => {
+    if (pageIndex !== pageNumber) {
+      onPageChange(pageIndex, 'next')
+      setSelected('')
+    }
+  }
 
   return(
     <div className="relative flex justify-center">
-      <div className="reader h-screen w-[80vw] overflow-hidden overflow-x-auto">
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+      <div className="fixed hidden left-0 top-0 text-white">
+        Current: {pageNumber} / {pageNumber+1}
+        pageNumber: {pageNumber} /
+        numPage: {numPages} /
+        spreadWidth: {spreadWidth} /
+      </div>
+      <div ref={currentRef} className="reader h-screen w-[82vw] flex items-center justify-center overflow-hidden overflow-x-auto z-10">
+        <Document 
+          file={file}
+          inputRef={documentRef}
+          onLoadSuccess={onDocumentLoadSuccess}
+          // onItemClick={onClickOutline}
+          loading={<Loader />}
+          className="flex items-center justify-center h-full w-full overflow-x-hidden relative text-white"
+        >
+          <div
+            id="page-wrapper"
+            ref={pageWrapperRef}
+            className="page-wrapper flex items-center h-full relative transition"
+            style={{ width: numPages*spreadWidth + 'px'}}
+          >
+            {Array.apply(null, Array(numPages))
+              .map((x, i)=>i+1)
+              .map((item, index) => (
+                item >= pageNumber - 2 && item <= pageNumber + 3 &&
+                <div
+                  key={index}
+                  className={`page-container ${item === pageNumber ? 'flex' : ''}`}
+                  // value={index * spreadWidth}
+                  style={{ transform: 'translateX('+ (item-1) * spreadWidth/2 + 'px)' }}
+                >
+                  {renderPage(item)}
+                </div>
+              ))
+            }
+          </div>
 
-        <Viewer 
-          fileUrl={file}
-          pageLayout={pageLayout}
-          plugins={[
-            bookmarkPluginInstance, 
-            // disableScrollPluginInstance, 
-            pageNavigationPluginInstance
-          ]}
-          defaultScale={SpecialZoomLevel.PageFit}
-          viewMode={ViewMode.DualPage}
-          renderLoader={renderLoader}
-          scrollMode={ScrollMode.Page}
-          // renderViewer={(props) => (
-          //   <div className="pdf-viewer-container">
-          //     <div style={{ display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
-          //       {props.children}
-          //     </div>
-          //   </div>
-          // )}
-        />
-        </Worker>
+          {/* Outline */}
+          <Sidebar
+            about={info}
+            toc={
+              <Outline onItemClick={onClickOutline} />
+            }
+            selected={selected}
+            setSelected={setSelected}
+          />
+        </Document>
       </div>
 
-      <Sidebar
-        about={info}
-        toc={
-          <Bookmarks renderBookmarkItem={renderBookmarkItem} />
-        }
-        selected={selected}
-        setSelected={setSelected}
-      />
-
-      <div className="absolute flex h-screen items-center left-0 top-0">
-      <GoToPreviousPage>
-      {
-        (props: RenderGoToPageProps) => (
-          <button
-            style={{
-              // backgroundColor: props.isDisabled ? '#ff0000' : 'transparent',
-              border: 'none',
-              cursor: props.isDisabled ? 'not-allowed' : 'pointer',
-              height: 'fit-content',
-              margin: '36px',
-              visibility: props.isDisabled ? 'hidden' : 'visible',
-              transform: 'rotate(180deg)',
-              top: 0,
-            }}
-            // It will be disabled if the current page is the first page
-            disabled={props.isDisabled}
-            onClick={props.onClick}
-          >
-            <NextButton />
-          </button>
-        )
-      }
-      </GoToPreviousPage>
-      </div>
-
-      <div className="absolute flex items-center h-screen right-0 top-0">
-      <GoToNextPage>
-        {(props: RenderGoToPageProps) => (
-          <button
-            style={{
-              // backgroundColor: props.isDisabled ? '#ff0000' : 'transparent',
-              border: 'none',
-              cursor: props.isDisabled ? 'not-allowed' : 'pointer',
-              height: 'fit-content',
-              margin: '36px',
-              visibility: props.isDisabled ? 'hidden' : 'visible',
-            }}
-            disabled={props.isDisabled}
-            onClick={props.onClick}
-          >
-            <NextButton />
-          </button>
-        )}
-      </GoToNextPage>
-      </div>
-
-      {/* <div className="absolute flex items-center h-screen right-0 bottom-0">
-      <GoToLastPage>
-        {(props: RenderGoToPageProps) => (
-          <button
-            style={{
-              backgroundColor: props.isDisabled ? '#96ccff' : '#357edd',
-              border: 'none',
-              cursor: props.isDisabled ? 'not-allowed' : 'pointer',
-              height: 'fit-content',
-              padding: '8px',
-            }}
-            disabled={props.isDisabled}
-            onClick={props.onClick}
-          >
-            Last
-          </button>
-        )}
-      </GoToLastPage>
-      </div> */}
+      {/* Controls */}
+      <button 
+        className="nav-button absolute flex h-screen items-center left-0 top-0 px-4 rotate-180" 
+        onClick={() => { 
+          onPageChange(pageNumber - 2, 'prev')
+        }}
+        disabled={pageNumber === 1}
+      >
+        <NextButton />
+      </button>
+      <button 
+        className="nav-button absolute flex items-center h-screen right-0 top-0 px-4" 
+        onClick={() => { 
+          onPageChange(pageNumber + 2, 'next')
+        } }
+        disabled={pageNumber >= numPages}
+      >
+        <NextButton />
+      </button>
+      {/* / Control */}
     </div>
   )
 }

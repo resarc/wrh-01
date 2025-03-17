@@ -18,6 +18,12 @@ export default {
         'wrh-green': "#008F4F",
         'wrh-blue': "#6F80B1",
       },
+      keyframes: {
+        loading: {
+          '0%, 100%': { transform: 'scaleX(1)' },
+          '50%': { transform: 'scaleX(.5)' },
+        },
+      },
     },
   },
   plugins: [],

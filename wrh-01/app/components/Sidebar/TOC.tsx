@@ -11,10 +11,10 @@ export default function TOC({
     setSelected('')
   }
 
-  const onSelected = selected == 'toc' ? 'z-20' : ''
+  const onSelected = selected == 'toc' ? 'opacity-100' : 'opacity-0'
 
   return (
-    <div className={`bookmark absolute bg-wrh-blue flex   h-full w-full ${onSelected}`}>
+    <div className={`bookmark absolute bg-wrh-blue flex h-full w-full transition duration-700 ${onSelected}`}>
       <div className="overflow-y-scroll pb-[10rem] pt-10 pl-8 pr-[6rem] w-full">
         {toc}
       </div>

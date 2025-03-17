@@ -1,0 +1,251 @@
+'use client'
+import { Fragment, useState, useCallback, useMemo, useRef } from 'react'
+
+import { pdfjs, Document, Page, Outline } from 'react-pdf'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
+
+import { TypedObject } from '@portabletext/types'
+
+import NextButton from '@/app/components/NextButton'
+import Sidebar from '@/app/components/Sidebar'
+import Loader from '@/app/components/Loader'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   'pdfjs-dist/build/pdf.worker.min.mjs',
+//   import.meta.url,
+// ).toString()
+
+export default function Reader({
+  file, info
+}:{
+  file: string
+  info: TypedObject
+}) {
+  const currentRef = useRef(null)
+  const [ selected, setSelected ] = useState<string>('')
+  const [ numPages, setNumPages ] = useState<number>(0)
+  const [ pageNumber, setPageNumber ] = useState<number>(1)
+  const [ transitioning, setTransitioning ] = useState<string>('')
+  const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
+  // const [ pagesToRender, setPagesToRender ] = useState<number[]>([]);
+
+  // useEffect(() => {
+  //   if (numPages) {
+  //     const newPages = [
+  //       pageNumber - 1 > 0 ? pageNumber - 1 : 1,   // Previous page, but don't go below 1
+  //       pageNumber,                               // Current page
+  //       pageNumber + 1 <= numPages ? pageNumber + 1 : numPages, // Next page, but don't exceed numPages
+  //     ]
+  //     setPagesToRender(newPages)
+  //   }
+  // }, [pageNumber, numPages])
+
+  const pagesToRender = useMemo(() => {
+    return {
+      prevPages: [
+        pageNumber - 2, // Previous pages
+        pageNumber - 1, // Previous page
+      ],
+      currentPages: [
+        pageNumber,
+        pageNumber + 1
+      ],
+      nextPages: [
+        pageNumber + 2, // Next page
+        pageNumber + 3, // Next next page
+      ]
+    };
+  }, [pageNumber, numPages]);
+
+  const renderPage = useCallback((pageNum: number) => {
+    return (
+      pageNum ? (
+        <Page
+          key={pageNum} // Using pageNum as the key to optimize re-renders
+          pageNumber={pageNum}
+          width={560}
+          loading={<Loader />}
+          className={pageNum === pageNumber ? 'left' : 'right'}
+        />
+      ) : null
+    );
+  }, [Loader, pageNumber])
+  
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
+    setNumPages(numPages)
+    setSpreadWidth(currentRef.current.offsetWidth)
+  }
+
+  const onPageChange = ( newPageNumber: number, direction : string ) => {
+    if (newPageNumber !== pageNumber) {
+      setTransitioning(direction)
+      // setPrevPageNumber(newPageNumber - 2)
+      // setNextPageNumber(newPageNumber + 2)
+
+      setTimeout(() => {
+        setPageNumber(newPageNumber)
+        setTransitioning('')
+      }, 300)
+    }
+  }
+
+  const onClickOutline = ({ 
+    pageIndex, pageNumber 
+  } : {
+    pageIndex: number
+    pageNumber: number
+  }) => {
+    if (pageIndex !== pageNumber) {
+      onPageChange(pageIndex, 'next')
+      setSelected('')
+    }
+  }
+
+  return(
+    <div className="relative flex justify-center">
+      <div className="fixed left-0 top-0 text-white">
+        Previous: {pagesToRender.prevPages[0]} / {pagesToRender.prevPages[1]}
+        Current: {pagesToRender.currentPages[0]} / {pagesToRender.currentPages[1]}
+        Next: {pagesToRender.nextPages[0]} / {pagesToRender.nextPages[1]}
+        numPage: {numPages}
+        spreadWidth: {spreadWidth}
+      </div>
+      <div ref={currentRef} className="reader h-screen w-[82vw] flex items-center justify-center overflow-hidden overflow-x-auto z-10">
+        <Document 
+          file={file} 
+          onLoadSuccess={onDocumentLoadSuccess}
+          // onItemClick={onClickOutline}
+          loading={<Loader />}
+          className="flex items-center justify-center h-full w-full overflow-x-hidden relative text-white"
+        >
+          <div 
+            className="page-wrapper flex items-center h-full relative transition"
+            style={{ width: numPages*spreadWidth + 'px'}}
+          >
+          {/* Previous */}
+          {pagesToRender.prevPages[0] > 1 &&
+          <div 
+            className={`page-container previous transition`} 
+            value={(((pageNumber-2) - 1) / 2) * spreadWidth}
+            // style={{ transform: 'translateX('+(((pageNumber-2) - 1) / 2) * spreadWidth + 'px)' }}
+          >
+          {pagesToRender.prevPages.map((pageNum, index) => (
+            pageNum && (
+              <Fragment key={index}>
+                {renderPage(pageNum)}
+              </Fragment>
+            )
+          ))}
+          </div>
+          }
+
+          {/* Current */}
+          {/* <div ref={currentRef} className={`page-container current transition ${transitioning === 'prev' ? `translate-x-${spreadWidth}` : transitioning === 'next' ? '-translate-x-full' : ''}`} value={((pagesToRender.currentPages[0] - 1) / 2) * spreadWidth}> */}
+          <div 
+            className={`page-container current transition `} 
+            value={((pageNumber - 1) / 2) * spreadWidth}
+            // style={{ transform: 'translateX('+((pageNumber - 1) / 2) * spreadWidth + 'px)' }}
+          >
+
+          {pagesToRender.currentPages.map((pageNum, index) => (
+            pageNum && (
+              <Fragment key={index}>
+                {renderPage(pageNum)}
+              </Fragment>
+            )
+          ))}
+            
+          </div>
+
+          {/* Next */}
+          {pagesToRender!.nextPages[0] < numPages &&
+          <div 
+            className={`page-container next transition`} 
+            value={((pageNumber+2 - 1) / 2) * spreadWidth}
+            // style={{ transform: 'translateX('+(((pageNumber+2) - 1) / 2) * spreadWidth + 'px)' }}
+          > 
+            {pagesToRender.nextPages.map((pageNum, index) => (
+              pageNum && (
+                <Fragment key={index}>
+                  {renderPage(pageNum)}
+                </Fragment>
+              )
+            ))}
+          </div>
+          }
+          </div>
+
+          {/* Previous */}
+          {/* {pageNumber >= 0 &&
+          <div className={`page-container previous transition`}>
+            <Page pageNumber={pageNumber - 2} width={560} loading={<Loader />} className="left" />
+            <Page pageNumber={pageNumber === 1 ? prevPageNumber : pageNumber - 1} width={560} loading={<Loader />} className="right" />
+          </div>
+          } */}
+
+          {/* Current */}
+          {/* <div className={`page-container current transition ${transitioning == 'prev' ? 'translate-x-full' : transitioning == 'next' ? '-translate-x-full' : '' }`}>
+            <Page 
+              pageNumber={pageNumber} 
+              width={560}
+              // loading=''
+              loading={<Loader />}
+              className="left"
+              // canvasBackground="transparent"
+            />
+            {pageNumber < numPages &&
+            <Page 
+              pageNumber={pageNumber+1} 
+              width={560} 
+              // loading=''
+              loading={<Loader />}
+              className="right"
+              // canvasBackground="transparent"
+            />
+            }
+          </div> */}
+          {/* Next */}
+          {/* {pageNumber !== numPages &&
+          <div className={`page-container next transition`}>
+            <Page pageNumber={pageNumber + 2} width={560} loading={<Loader />} className="left" />
+            <Page pageNumber={pageNumber + 3} width={560} loading={<Loader />} className="right" />
+          </div>
+          } */}
+
+          {/* Outline */}
+          <Sidebar
+            about={info}
+            toc={
+              <Outline onItemClick={onClickOutline} />
+            }
+            selected={selected}
+            setSelected={setSelected}
+          />
+        </Document>
+      </div>
+
+      {/* Controls */}
+      <button 
+        className="nav-button absolute flex h-screen items-center left-0 top-0 px-4 rotate-180" 
+        onClick={() => { 
+          onPageChange(pageNumber - 2, 'prev')
+        }}
+        disabled={pageNumber === 1}
+      >
+        <NextButton />
+      </button>
+      <button 
+        className="nav-button absolute flex items-center h-screen right-0 top-0 px-4" 
+        onClick={() => { 
+          onPageChange(pageNumber + 2, 'next')
+        } }
+        disabled={pageNumber >= numPages}
+      >
+        <NextButton />
+      </button>
+    </div>
+  )
+}
