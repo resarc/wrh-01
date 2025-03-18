@@ -53,6 +53,7 @@ export default function Reader({
         width={700}
         loading={<div className="flex w-1/2"><Loader /></div>}
         className={pageNum === pageNumber ? 'left' : 'right'}
+        scale={1.5}
       />
     )
   }, [pageNumber])
