@@ -128,7 +128,7 @@ export default function Reader({
             {Array.apply(null, Array(numPages))
               .map((x, i)=>i+1)
               .map((item, index) => (
-                item >= pageNumber - 2 && item <= pageNumber + 3 &&
+                item >= pageNumber - 4 && item <= pageNumber + 5 &&
                 <div
                   key={index}
                   className={`page-container`}

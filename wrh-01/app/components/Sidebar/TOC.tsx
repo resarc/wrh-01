@@ -11,7 +11,7 @@ export default function TOC({
     setSelected('')
   }
 
-  const onSelected = selected == 'toc' ? 'opacity-100' : 'opacity-0'
+  const onSelected = selected == 'toc' ? 'opacity-100 z-50' : 'opacity-0 z-10'
 
   return (
     <div className={`bookmark absolute bg-wrh-blue flex h-full w-full transition duration-700 ${onSelected}`}>

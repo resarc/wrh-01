@@ -12,7 +12,7 @@ export default function Panel({
   const triggerClose = () => {
     setSelected('')
   }
-  const onSelected = selected == 'about' ? 'opacity-100' : 'opacity-0'
+  const onSelected = selected == 'about' ? 'opacity-100 z-50' : 'opacity-0 z-10'
 
   return(
     <div className={`about absolute bg-wrh-green flex h-full w-full transition duration-700 ${onSelected}`}>

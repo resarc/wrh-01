@@ -79,6 +79,7 @@ body {
     @apply hidden;
   }
 }
+
 .bookmark {
   .react-pdf__Outline {
     li {
