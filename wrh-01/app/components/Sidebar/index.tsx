@@ -10,7 +10,7 @@ export default function Sidebar({
   about, bookmark, toc, selected, setSelected, onPageChange, pageNumber
 }:{
   about: TypedObject
-  bookmark: Bookmark
+  bookmark: Bookmark[]
   toc: React.ReactNode
   selected: string
   setSelected: any

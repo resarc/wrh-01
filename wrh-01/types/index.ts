@@ -8,7 +8,7 @@ export type BookType = {
   slug: string
   coverImage: string
   pdf: string
-  bookmark: Bookmark
+  bookmark: Bookmark[]
   info: TypedObject
 }
 

@@ -7,7 +7,7 @@ export default function TOC({
   toc: React.ReactNode
   selected: string
   setSelected: any
-  bookmark: Bookmark
+  bookmark: Bookmark[]
   onPageChange: any
   pageNumber: number
 }) {
@@ -27,7 +27,6 @@ export default function TOC({
           bookmark.map((item, index) => 
             <button 
               key={index}
-              data={item.pageNo}
               className="bookmark-item border-b last:border-b-0 border-white flex flex-col py-4 first:pt-0 w-full"
               onClick={() => { 
                 onPageChange(item.pageNo, 'next')

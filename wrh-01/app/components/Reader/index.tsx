@@ -19,7 +19,7 @@ export default function Reader({
 }:{
   file: string
   info: TypedObject
-  bookmark: Bookmark
+  bookmark: Bookmark[]
 }) {
   const currentRef = useRef<HTMLDivElement>(null)
   const afterRef = useRef<HTMLDivElement>(null)
