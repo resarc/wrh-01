@@ -107,7 +107,7 @@ export default function Reader({
   return(
     <div className="relative flex justify-center">
       {/* <div className="fixed hidden left-0 top-0 text-white z-50"> */}
-      <div className="fixed left-0 top-0 text-white z-50">
+      <div className="hiddenfixed left-0 top-0 text-white z-50">
         Current: {pageNumber} / {pageNumber+1}
         pageNumber: {pageNumber} /
         numPage: {numPages} /
