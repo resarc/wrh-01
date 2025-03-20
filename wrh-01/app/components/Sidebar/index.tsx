@@ -1,4 +1,5 @@
 'use client'
+import type { Bookmark } from '@/types'
 import { TypedObject } from '@portabletext/types'
 import { useEffect, useRef } from 'react'
 import Button from '@/app/components/Sidebar/Button'
@@ -6,12 +7,15 @@ import About from '@/app/components/Sidebar/About'
 import TOC from '@/app/components/Sidebar/TOC'
 
 export default function Sidebar({
-  about, toc, selected, setSelected
+  about, bookmark, toc, selected, setSelected, onPageChange, pageNumber
 }:{
   about: TypedObject
+  bookmark: Bookmark
   toc: React.ReactNode
   selected: string
   setSelected: any
+  onPageChange: any
+  pageNumber: number
 }) {
   const SidebarRef = useRef<HTMLInputElement>(null)
 
@@ -64,8 +68,11 @@ export default function Sidebar({
 
       <TOC 
         toc={toc}
+        bookmark={bookmark}
         selected={selected}
         setSelected={setSelected}
+        onPageChange={onPageChange}
+        pageNumber={pageNumber}
       />
     </div>
     <div className={`fixed bg-black opacity-30 transition h-full w-full ${covered}`}></div>

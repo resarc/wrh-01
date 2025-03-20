@@ -1,4 +1,5 @@
 'use client'
+import type { Bookmark } from '@/types'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 import { pdfjs, Document, Page, Outline } from 'react-pdf'
@@ -14,10 +15,11 @@ import Loader from '@/app/components/Loader'
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export default function Reader({
-  file, info
+  file, info, bookmark
 }:{
   file: string
   info: TypedObject
+  bookmark: Bookmark
 }) {
   const currentRef = useRef<HTMLDivElement>(null)
   const afterRef = useRef<HTMLDivElement>(null)
@@ -104,7 +106,8 @@ export default function Reader({
 
   return(
     <div className="relative flex justify-center">
-      <div className="fixed hidden left-0 top-0 text-white z-50">
+      {/* <div className="fixed hidden left-0 top-0 text-white z-50"> */}
+      <div className="fixed left-0 top-0 text-white z-50">
         Current: {pageNumber} / {pageNumber+1}
         pageNumber: {pageNumber} /
         numPage: {numPages} /
@@ -144,11 +147,14 @@ export default function Reader({
           {/* Outline */}
           <Sidebar
             about={info}
+            bookmark={bookmark}
             toc={
               <Outline onItemClick={onClickOutline} />
             }
             selected={selected}
             setSelected={setSelected}
+            onPageChange={onPageChange}
+            pageNumber={pageNumber}
           />
         </Document>
       </div>

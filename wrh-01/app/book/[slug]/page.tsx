@@ -20,7 +20,7 @@ export default async function Souvenir(props: { params: Params }) {
 
   return(
     <>
-      <Reader file={book.pdf} info={book.info}/>
+      <Reader file={book.pdf} info={book.info} bookmark={book.bookmark} />
     </>
   )
 }

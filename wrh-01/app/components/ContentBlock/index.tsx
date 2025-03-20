@@ -10,7 +10,13 @@ const ContentBlock = ({
   const components = {
     types: {
       image: ({ value }: any) => <Image_ value={value} />,
-      googleMap: ({ value }: any) => <GoogleMap url={value.url} />
+      googleMap: ({ value }: any) => <GoogleMap url={value.url} />,
+      hr: ({ value }: any) => {
+        if ( value.style === 'lineBreak' ) {
+          return <hr className="line-break" />
+        }
+        return null
+      }
     },
     block: {
       normal: ({ children }: any) => {

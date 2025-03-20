@@ -14,5 +14,6 @@ defineQuery(`*[_type == 'book' && slug == $slug][0] {
   slug,
   'coverImage': coverImage.asset->url,
   'pdf': pdf.asset->url,
+  bookmark,
   info,
 }`)

@@ -27,6 +27,18 @@ export default {
       type: 'file',
     },
     {
+      name: 'bookmark',
+      title: 'Bookmark',
+      type: 'array',
+      of: [
+        {
+          name: 'bookmarkItem',
+          title: 'Bookmark item',
+          type: 'bookmark',
+        }
+      ]
+    },
+    {
       name: 'info',
       title: 'Info',
       type: 'portableText',

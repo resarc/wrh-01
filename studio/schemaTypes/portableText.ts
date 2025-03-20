@@ -50,5 +50,8 @@ export default {
         },
       ],
     },
+    {
+      type: 'hr',
+    }
   ]
 };
