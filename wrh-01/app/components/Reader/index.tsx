@@ -1,6 +1,8 @@
 'use client'
+import Panzoom from '@panzoom/panzoom'
+
 import type { Bookmark } from '@/types'
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { pdfjs, Document, Page, Outline } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
@@ -9,6 +11,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import { TypedObject } from '@portabletext/types'
 
 import NextButton from '@/app/components/NextButton'
+import ResetButton from '@/app/components/ResetButton'
 import Sidebar from '@/app/components/Sidebar'
 import Loader from '@/app/components/Loader'
 
@@ -22,7 +25,8 @@ export default function Reader({
   bookmark: Bookmark[]
 }) {
   const currentRef = useRef<HTMLDivElement>(null)
-  const afterRef = useRef<HTMLDivElement>(null)
+  const zoomRef = useRef<HTMLDivElement>(null)
+  const resetRef = useRef<HTMLDivElement>(null)
 
   const pageWrapperRef = useRef<HTMLDivElement>(null)
   const documentRef = useRef<HTMLDivElement>(null)
@@ -30,7 +34,6 @@ export default function Reader({
   const [ selected, setSelected ] = useState<string>('')
   const [ numPages, setNumPages ] = useState<number>(0)
   const [ pageNumber, setPageNumber ] = useState<number>(1)
-  const [ transitioning, setTransitioning ] = useState<string>('')
   const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
 
   useEffect(() => {
@@ -38,14 +41,75 @@ export default function Reader({
       if (currentRef.current) {
         setSpreadWidth(currentRef.current.offsetWidth)
       }
-    };
+    }
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize)
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
+
+  useEffect(() => {
+    if (zoomRef.current) {
+      const element = zoomRef.current
+
+      const preventDefaultZoom = (e: any) => {
+        // Prevent default zoom behavior on iOS and touch devices
+        if (e.touches.length > 1) {
+          e.preventDefault()
+        }
+      }
+      // Add event listener to prevent default pinch zoom
+      element.addEventListener('touchstart', preventDefaultZoom, { passive: false });
+      element.addEventListener('touchmove', preventDefaultZoom, { passive: false });
+
+      // Cleanup on component unmount
+      return () => {
+        element.removeEventListener('touchstart', preventDefaultZoom);
+        element.removeEventListener('touchmove', preventDefaultZoom);
+        // panzoomInstance.dispose();
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (zoomRef.current) {
+      const element = zoomRef.current
+      const panzoom = Panzoom(element, {
+        maxScale: 3.5,
+        minScale: 1,
+        contain: 'outside',
+      })
+  
+      if (resetRef.current && panzoom) {
+        resetRef.current.addEventListener('click', panzoom.reset)
+      }
+    }
+  }, [zoomRef.current])
+  
+  useEffect(() => {
+    function handleGestureOutside(e: any) {
+      if (zoomRef.current && !zoomRef.current.contains(e.target)) {
+        e.preventDefault()
+      }
+    }
+    
+    // Bind the event listener
+    document.addEventListener('wheel', handleGestureOutside)
+    document.addEventListener('gesturestart', handleGestureOutside)
+
+    return () => {
+      // Unbind the event listener on clean up
+      document.removeEventListener('wheel', handleGestureOutside)
+      document.removeEventListener('gesturestart', handleGestureOutside)
+    }
+  })
+
+  // useEffect(() => {
+  //   panzoom.getScale() > 1 && setIsZoomedOrPanned(true)
+  //   console.log(isZoomedOrPanned)
+  // }, [panzoom.getScale()])
 
   const renderPage = useCallback((pageNum: number) => {
     return (
@@ -54,21 +118,14 @@ export default function Reader({
         pageNumber={pageNum}
         width={700}
         loading={<div className="flex w-1/2"><Loader /></div>}
-        className={pageNum === pageNumber ? 'left' : 'right'}
+        className={`overflow-hidden ${pageNum === pageNumber ? 'left' : 'right'}`}
         scale={1.5}
       />
     )
   }, [pageNumber])
   
   const onDocumentLoadSuccess = (pdf: any): void  => {
-
-    // setSpreadStart([pageNumber, pageNumber+1, pageNumber+2])
-
     setNumPages(pdf.numPages)
-
-    // setSpreadBefore([pageNumber - 2, pageNumber -1])
-    // setSpreadCurrent(pageNumber)
-    // setSpreadAfter([pageNumber + 6, pageNumber + 8])
 
     if (currentRef.current) {
       setSpreadWidth(currentRef.current.offsetWidth)
@@ -77,23 +134,26 @@ export default function Reader({
 
   const onPageChange = ( newPageNumber: number, direction : string ) => {
     if (newPageNumber !== pageNumber) {
-      setTransitioning(direction)
+      if (zoomRef.current) {
+        zoomRef.current.style.transform = 'unset'
+      }
+
+      // setTransitioning(direction)
 
       if (pageWrapperRef.current ) {
         pageWrapperRef.current.style.transform = `translateX(-${(newPageNumber-1) * (spreadWidth/2)}px)`
-      } 
+      }
 
       setTimeout(() => {
         setPageNumber(newPageNumber)
-        // setSpreadBefore([newPageNumber - 2, newPageNumber - 1])
-        // setSpreadCurrent(newPageNumber)
-        setTransitioning('')
+
+        // setTransitioning('')
       }, 300)
     }
   }
 
   const onClickOutline = ({ 
-    pageIndex, pageNumber 
+    pageIndex, pageNumber
   } : {
     pageIndex: number
     pageNumber: number
@@ -107,12 +167,9 @@ export default function Reader({
   return(
     <div className="relative flex justify-center">
       {/* <div className="fixed hidden left-0 top-0 text-white z-50"> */}
-      <div className="hidden fixed left-0 top-0 text-white z-50">
-        Current: {pageNumber} / {pageNumber+1}
-        pageNumber: {pageNumber} /
-        numPage: {numPages} /
-        spreadWidth: {spreadWidth} /
+      <div className="hidden fixed bg-black left-0 top-0 text-white z-50">
       </div>
+      
       <div ref={currentRef} className="reader h-screen w-[82vw] flex items-center justify-center overflow-hidden overflow-x-auto z-10">
         <Document 
           file={file}
@@ -120,8 +177,9 @@ export default function Reader({
           onLoadSuccess={onDocumentLoadSuccess}
           // onItemClick={onClickOutline}
           loading={<Loader />}
-          className="flex items-center justify-center h-full w-full overflow-x-hidden relative text-white"
+          className="flex items-center justify-center h-full w-full overflow-hidden relative text-white"
         >
+          <div ref={zoomRef} id="zoom-container" className="flex items-center h-full overflow-hidden relative transition">
           <div
             id="page-wrapper"
             ref={pageWrapperRef}
@@ -134,7 +192,7 @@ export default function Reader({
                 item >= pageNumber - 4 && item <= pageNumber + 5 &&
                 <div
                   key={index}
-                  className={`page-container`}
+                  className={`page-container overflow-hidden`}
                   // value={index * spreadWidth}
                   style={{ transform: 'translateX('+ (item-1) * spreadWidth/2 + 'px)' }}
                 >
@@ -142,6 +200,7 @@ export default function Reader({
                 </div>
               ))
             }
+          </div>
           </div>
 
           {/* Outline */}
@@ -178,6 +237,7 @@ export default function Reader({
       >
         <NextButton />
       </button>
+      
       {/* / Control */}
     </div>
   )

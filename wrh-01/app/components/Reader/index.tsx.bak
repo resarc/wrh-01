@@ -1,5 +1,6 @@
 'use client'
-import { Fragment, useState, useCallback, useMemo, useRef } from 'react'
+import type { Bookmark } from '@/types'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { pdfjs, Document, Page, Outline } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
@@ -11,89 +12,292 @@ import NextButton from '@/app/components/NextButton'
 import Sidebar from '@/app/components/Sidebar'
 import Loader from '@/app/components/Loader'
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.min.mjs',
-//   import.meta.url,
-// ).toString()
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export default function Reader({
-  file, info
+  file, info, bookmark
 }:{
   file: string
   info: TypedObject
+  bookmark: Bookmark[]
 }) {
-  const currentRef = useRef(null)
+  const currentRef = useRef<HTMLDivElement>(null)
+  const zoomRef = useRef<HTMLDivElement>(null)
+
+  const pageWrapperRef = useRef<HTMLDivElement>(null)
+  const documentRef = useRef<HTMLDivElement>(null)
+
   const [ selected, setSelected ] = useState<string>('')
   const [ numPages, setNumPages ] = useState<number>(0)
   const [ pageNumber, setPageNumber ] = useState<number>(1)
-  const [ transitioning, setTransitioning ] = useState<string>('')
   const [ spreadWidth, setSpreadWidth ] = useState<number>(0)
-  // const [ pagesToRender, setPagesToRender ] = useState<number[]>([]);
 
-  // useEffect(() => {
-  //   if (numPages) {
-  //     const newPages = [
-  //       pageNumber - 1 > 0 ? pageNumber - 1 : 1,   // Previous page, but don't go below 1
-  //       pageNumber,                               // Current page
-  //       pageNumber + 1 <= numPages ? pageNumber + 1 : numPages, // Next page, but don't exceed numPages
-  //     ]
-  //     setPagesToRender(newPages)
-  //   }
-  // }, [pageNumber, numPages])
+  const [ isPinching, setIsPinching ] = useState<boolean>(false)
+  const [ isTouchMoving, setIsTouchMoving ] = useState<boolean>(false)
+  const [ isDragging, setIsDragging ] = useState<boolean>(false)
+  const [ initialDistance, setInitialDistance ] = useState<number>(0)
+  const [ initialScale, setInitialScale ] = useState<number>(1)
+  const [ distance, setDistance ] = useState<string>('')
+  const [ scale, setScale ] = useState<number>(1)
+  const [ startX, setStartX ] = useState<number>(0)
+  const [ startY, setStartY ] = useState<number>(0)
+  const [ initialX, setInitialX ] = useState<number>(0)
+  const [ initialY, setInitialY ] = useState<number>(0)
+  const [ offsetX, setOffsetX ] = useState<number>(0)
+  const [ offsetY, setOffsetY ] = useState<number>(0)
 
-  const pagesToRender = useMemo(() => {
-    return {
-      prevPages: [
-        pageNumber - 2, // Previous pages
-        pageNumber - 1, // Previous page
-      ],
-      currentPages: [
-        pageNumber,
-        pageNumber + 1
-      ],
-      nextPages: [
-        pageNumber + 2, // Next page
-        pageNumber + 3, // Next next page
-      ]
-    };
-  }, [pageNumber, numPages]);
+  const [ start, setStart ] = useState<array>({})
+  const [ transformed, setTransformed ] = useState<string>('')
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (currentRef.current) {
+        setSpreadWidth(currentRef.current.offsetWidth)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    function handleGestureOutside(e: any) {
+      if (zoomRef.current && !zoomRef.current.contains(e.target)) {
+        e.preventDefault()
+      }
+    }
+
+    // Calculate distance between two fingers
+    function getDistance(touch1, touch2) {
+      const xDiff = touch2.pageX - touch1.pageX
+      const yDiff = touch2.pageY - touch1.pageY
+      return Math.sqrt(xDiff * xDiff + yDiff * yDiff)
+    }
+
+    let smoothFactor = 0
+
+    if (zoomRef.current) {
+      zoomRef.current.addEventListener('touchstart', function(e:any) {
+        if (zoomRef.current && zoomRef.current.contains(e.target)) {
+          if (e.touches.length === 2) {
+            setIsPinching(true)
+
+            setInitialDistance(getDistance(e.touches[0], e.touches[1]))
+            setInitialScale(scale)
+          } else if (e.touches.length === 1) {
+            setIsDragging(true)
+            setInitialX(e.touches[0].clientX - offsetX)
+            setInitialY(e.touches[0].clientY - offsetY)
+          }
+        }
+      })
+
+      zoomRef.current.addEventListener('touchmove', function(e: any) {
+        if (isPinching && e.touches.length === 2) {
+          const currentDistance = getDistance(e.touches[0], e.touches[1])
+          const scaleChange = currentDistance / initialDistance
+
+          setScale(Math.min(Math.max(1, initialScale * scaleChange), 3.5))
+          setStartX(e.clientX - initialX)
+          setStartY(e.clientY - initialY)
+
+
+          // Apply the scaling
+          // zoomRef.current.style.transform = `scale(${scale}) translate(${startX}px, ${startY}px)`
+
+          // Applying smooth zooming with throttling to reduce flicker
+          if (!isTouchMoving) {
+            setIsTouchMoving(true)
+            requestAnimationFrame(() => {
+              zoomRef.current.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
+              setIsTouchMoving(false)
+            });
+          }
+
+          // Prevent default behavior (scrolling)
+          e.preventDefault()
+        } else if (isDragging && e.touches.length === 1) {
+          setOffsetX(e.touches[0].clientX - initialX)
+          setOffsetY(e.touches[0].clientY - initialY)
+
+          zoomRef.current.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
+
+          e.preventDefault()
+        }
+      })
+
+      zoomRef.current.addEventListener('touchend', (e: any) => {
+        setIsPinching(false)
+        setIsDragging(false)
+      });
+
+      // Mouse events for dragging after pinch zoom
+      // zoomRef.current.addEventListener('mousedown', (e: any) => {
+      //   setInitialX(e.clientX - startX)
+      //   setInitialY(e.clientY - startY)
+      //   zoomRef.current.addEventListener('mousemove', dragImage)
+      //   zoomRef.current.addEventListener('mouseup', stopDragging)
+      // })
+
+      // function dragImage(e) {
+      //   setStartX(e.clientX - initialX)
+      //   setStartY(e.clientY - initialY)
+      //   zoomRef.current.style.transform = `scale(${scale}) translate(${startX}px, ${startY}px)`
+      // }
+      // function stopDragging() {
+      //   zoomRef.current.removeEventListener('mousemove', dragImage)
+      //   zoomRef.current.removeEventListener('mouseup', stopDragging)
+      // }
+
+      // zoomRef.current.addEventListener('touchend', function(event: any) {
+      //     // Reset image to it's original format
+      //     zoomRef.current.style.transform = ""
+      //     zoomRef.current.style.WebkitTransform = ""
+      //     zoomRef.current.style.zIndex = ""
+
+      //     //reset initialLoad and translateX and translateY needed to apply the existing transform on image
+      //     initialLoad = true
+      //     translateX = 0
+      //     translateY = 0
+      // })
+ 
+
+    /* Zoom Start */
+    // function handleZoomStart(event: any) { 
+    //   if (currentRef.current && currentRef.current.contains(event.target)) {
+    //     if (event.touches.length === 2) {
+    //       event.preventDefault(); // Prevent page scroll
+
+    //       // Calculate where the fingers have started on the X and Y axis
+    //       start.x = (event.touches[0].pageX + event.touches[1].pageX) / 2
+    //       start.y = (event.touches[0].pageY + event.touches[1].pageY) / 2
+    //       start.distance = distance(event)
+    //     }
+    //   }
+    // }
+    /* Zoom Move */
+    // function handleZoomMove(event: any) {
+
+    //     if (event.touches.length === 2) {
+    //       event.preventDefault(); // Prevent page scroll
+
+    //       // Safari provides event.scale as two fingers move on the screen
+    //       // For other browsers just calculate the scale manually
+    //       let scale;
+    //       if (event.scale) {
+    //         scale = event.scale;
+    //       } else {
+    //         const deltaDistance = distance(event);
+    //         scale = deltaDistance / start.distance;
+    //       }
+    //       imageElementScale = Math.min(Math.max(1, scale), 4);
+          
+    //       // Check if it's the initial load
+    //       if (initialLoad) {
+    //         // Get the existing transform style property for proper calculations
+    //         var style = window.getComputedStyle(event.target);
+    //         const existingTransform = style.getPropertyValue('transform');
+
+    //         if(existingTransform.toString() !== "none") {
+    //           const rect = event.target.getBoundingClientRect();
+    //           translateX = -rect.width / 2;
+    //           translateY = -rect.height / 2;
+    //         }
+    //         initialLoad = false; // Update the flag to indicate initial load has occurred
+    //       }
+
+    //       // Calculate how much the fingers have moved on the X and Y axis
+    //       const deltaX = (((event.touches[0].pageX + event.touches[1].pageX) / 2) - start.x) * 2; // x2 for accelerated movement
+    //       const deltaY = (((event.touches[0].pageY + event.touches[1].pageY) / 2) - start.y) * 2; // x2 for accelerated movement
+
+    //       // Combine the existing transform with the additional calculations
+    //       const transform = `translate3d(` + (translateX + deltaX) + `px, ` + (translateY + deltaY) + `px, 0) scale(` + imageElementScale + `)`;
+    //       event.target.style.transform = transform;
+        
+    //       event.target.style.WebkitTransform = transform;
+    //       event.target.style.zIndex = "9999";
+    //     }
+    // }
+
+    /* Zoom End */
+    // function handleZoomEnd(event: any) {
+    //   // Reset image to it's original format
+    //   event.target.style.transform = ""
+    //   event.target.style.WebkitTransform = ""
+    //   event.target.style.zIndex = ""
+
+    //   //reset initialLoad and translateX and translateY needed to apply the existing transform on image
+    //   initialLoad = true
+    //   translateX = 0
+    //   translateY = 0
+    // }
+    }
+
+    // Bind the event listener
+    document.addEventListener('wheel', handleGestureOutside)
+    document.addEventListener('gesturestart', handleGestureOutside)
+    // document.addEventListener('gesturestart', handleGestureOutside)
+
+    // document.addEventListener("touchstart", handleZoomStart)
+    // document.addEventListener("touchmove", handleZoomMove)
+    // document.addEventListener("touchend", handleZoomEnd)
+
+    return () => {
+      // Unbind the event listener on clean up
+      document.removeEventListener('wheel', handleGestureOutside)
+      document.removeEventListener('gesturestart', handleGestureOutside)
+  
+      // document.removeEventListener("touchstart", handleZoomStart)
+      // document.removeEventListener("touchmove", handleZoomMove)
+      // document.removeEventListener("touchend", handleZoomEnd)
+    }
+  })
 
   const renderPage = useCallback((pageNum: number) => {
     return (
-      pageNum ? (
-        <Page
-          key={pageNum} // Using pageNum as the key to optimize re-renders
-          pageNumber={pageNum}
-          width={560}
-          loading={<Loader />}
-          className={pageNum === pageNumber ? 'left' : 'right'}
-        />
-      ) : null
-    );
-  }, [Loader, pageNumber])
+      <Page
+        key={pageNum}
+        pageNumber={pageNum}
+        width={700}
+        loading={<div className="flex w-1/2"><Loader /></div>}
+        className={`overflow-hidden ${pageNum === pageNumber ? 'left' : 'right'}`}
+        scale={1.5}
+      />
+    )
+  }, [pageNumber])
   
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
-    setNumPages(numPages)
-    setSpreadWidth(currentRef.current.offsetWidth)
+  const onDocumentLoadSuccess = (pdf: any): void  => {
+    setNumPages(pdf.numPages)
+
+    if (currentRef.current) {
+      setSpreadWidth(currentRef.current.offsetWidth)
+    }
   }
 
   const onPageChange = ( newPageNumber: number, direction : string ) => {
     if (newPageNumber !== pageNumber) {
-      setTransitioning(direction)
-      // setPrevPageNumber(newPageNumber - 2)
-      // setNextPageNumber(newPageNumber + 2)
+      setDistance(0)
+      zoomRef.current.style.transform = 'unset'
+
+      // setTransitioning(direction)
+
+      if (pageWrapperRef.current ) {
+        pageWrapperRef.current.style.transform = `translateX(-${(newPageNumber-1) * (spreadWidth/2)}px)`
+      }
 
       setTimeout(() => {
         setPageNumber(newPageNumber)
-        setTransitioning('')
+
+        // setTransitioning('')
       }, 300)
     }
   }
 
   const onClickOutline = ({ 
-    pageIndex, pageNumber 
+    pageIndex, pageNumber
   } : {
     pageIndex: number
     pageNumber: number
@@ -106,123 +310,68 @@ export default function Reader({
 
   return(
     <div className="relative flex justify-center">
-      <div className="fixed left-0 top-0 text-white">
-        Previous: {pagesToRender.prevPages[0]} / {pagesToRender.prevPages[1]}
-        Current: {pagesToRender.currentPages[0]} / {pagesToRender.currentPages[1]}
-        Next: {pagesToRender.nextPages[0]} / {pagesToRender.nextPages[1]}
-        numPage: {numPages}
-        spreadWidth: {spreadWidth}
+      {/* <div className="fixed hidden left-0 top-0 text-white z-50"> */}
+      <div className="hidden fixed left-0 top-0 text-white z-50">
+        Current: {pageNumber} / {pageNumber+1}
+        pageNumber: {pageNumber} /
+        numPage: {numPages} /
+        spreadWidth: {spreadWidth} /
       </div>
+      <div className="fixed flex flex-col bg-black left-0 top-0 text-white z-50">
+        <div>initialDistance: {initialDistance}</div>
+        <div>Distance: {distance}</div>
+        <div>Scale: {scale}</div>
+        <div>StartX: {startX}</div>
+        <div>StartY: {startY}</div>
+        <div>InitialX: {initialX}</div>
+        <div>InitialY: {initialY}</div>
+        <div>Transformed: {transformed}</div>
+      </div>
+      
       <div ref={currentRef} className="reader h-screen w-[82vw] flex items-center justify-center overflow-hidden overflow-x-auto z-10">
         <Document 
-          file={file} 
+          file={file}
+          inputRef={documentRef}
           onLoadSuccess={onDocumentLoadSuccess}
           // onItemClick={onClickOutline}
           loading={<Loader />}
-          className="flex items-center justify-center h-full w-full overflow-x-hidden relative text-white"
+          className="flex items-center justify-center h-full w-full overflow-hidden relative text-white"
         >
-          <div 
+          <div ref={zoomRef} className="flex items-center h-full overflow-hidden relative transition">
+          <div
+            id="page-wrapper"
+            ref={pageWrapperRef}
             className="page-wrapper flex items-center h-full relative transition"
             style={{ width: numPages*spreadWidth + 'px'}}
           >
-          {/* Previous */}
-          {pagesToRender.prevPages[0] > 1 &&
-          <div 
-            className={`page-container previous transition`} 
-            value={(((pageNumber-2) - 1) / 2) * spreadWidth}
-            // style={{ transform: 'translateX('+(((pageNumber-2) - 1) / 2) * spreadWidth + 'px)' }}
-          >
-          {pagesToRender.prevPages.map((pageNum, index) => (
-            pageNum && (
-              <Fragment key={index}>
-                {renderPage(pageNum)}
-              </Fragment>
-            )
-          ))}
-          </div>
-          }
-
-          {/* Current */}
-          {/* <div ref={currentRef} className={`page-container current transition ${transitioning === 'prev' ? `translate-x-${spreadWidth}` : transitioning === 'next' ? '-translate-x-full' : ''}`} value={((pagesToRender.currentPages[0] - 1) / 2) * spreadWidth}> */}
-          <div 
-            className={`page-container current transition `} 
-            value={((pageNumber - 1) / 2) * spreadWidth}
-            // style={{ transform: 'translateX('+((pageNumber - 1) / 2) * spreadWidth + 'px)' }}
-          >
-
-          {pagesToRender.currentPages.map((pageNum, index) => (
-            pageNum && (
-              <Fragment key={index}>
-                {renderPage(pageNum)}
-              </Fragment>
-            )
-          ))}
-            
-          </div>
-
-          {/* Next */}
-          {pagesToRender!.nextPages[0] < numPages &&
-          <div 
-            className={`page-container next transition`} 
-            value={((pageNumber+2 - 1) / 2) * spreadWidth}
-            // style={{ transform: 'translateX('+(((pageNumber+2) - 1) / 2) * spreadWidth + 'px)' }}
-          > 
-            {pagesToRender.nextPages.map((pageNum, index) => (
-              pageNum && (
-                <Fragment key={index}>
-                  {renderPage(pageNum)}
-                </Fragment>
-              )
-            ))}
-          </div>
-          }
-          </div>
-
-          {/* Previous */}
-          {/* {pageNumber >= 0 &&
-          <div className={`page-container previous transition`}>
-            <Page pageNumber={pageNumber - 2} width={560} loading={<Loader />} className="left" />
-            <Page pageNumber={pageNumber === 1 ? prevPageNumber : pageNumber - 1} width={560} loading={<Loader />} className="right" />
-          </div>
-          } */}
-
-          {/* Current */}
-          {/* <div className={`page-container current transition ${transitioning == 'prev' ? 'translate-x-full' : transitioning == 'next' ? '-translate-x-full' : '' }`}>
-            <Page 
-              pageNumber={pageNumber} 
-              width={560}
-              // loading=''
-              loading={<Loader />}
-              className="left"
-              // canvasBackground="transparent"
-            />
-            {pageNumber < numPages &&
-            <Page 
-              pageNumber={pageNumber+1} 
-              width={560} 
-              // loading=''
-              loading={<Loader />}
-              className="right"
-              // canvasBackground="transparent"
-            />
+            {Array.apply(null, Array(numPages))
+              .map((x, i)=>i+1)
+              .map((item, index) => (
+                item >= pageNumber - 4 && item <= pageNumber + 5 &&
+                <div
+                  key={index}
+                  className={`page-container overflow-hidden`}
+                  // value={index * spreadWidth}
+                  style={{ transform: 'translateX('+ (item-1) * spreadWidth/2 + 'px)' }}
+                >
+                  {renderPage(item)}
+                </div>
+              ))
             }
-          </div> */}
-          {/* Next */}
-          {/* {pageNumber !== numPages &&
-          <div className={`page-container next transition`}>
-            <Page pageNumber={pageNumber + 2} width={560} loading={<Loader />} className="left" />
-            <Page pageNumber={pageNumber + 3} width={560} loading={<Loader />} className="right" />
           </div>
-          } */}
+          </div>
 
           {/* Outline */}
           <Sidebar
             about={info}
+            bookmark={bookmark}
             toc={
               <Outline onItemClick={onClickOutline} />
             }
             selected={selected}
             setSelected={setSelected}
+            onPageChange={onPageChange}
+            pageNumber={pageNumber}
           />
         </Document>
       </div>
@@ -246,6 +395,7 @@ export default function Reader({
       >
         <NextButton />
       </button>
+      {/* / Control */}
     </div>
   )
 }
