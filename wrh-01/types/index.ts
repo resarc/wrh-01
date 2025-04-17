@@ -5,6 +5,7 @@ export type Params = Promise<{ slug: string }>
 export type BookType = {
   _id: string
   title: string
+  title_th: string
   slug: string
   coverImage: string
   pdf: string

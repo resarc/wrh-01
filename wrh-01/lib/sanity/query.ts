@@ -1,5 +1,14 @@
 import { defineQuery } from 'next-sanity'
 
+export const HOME_QUERY = 
+defineQuery(`*[_type == 'book'] {
+  _id,
+  title,
+  title_th,
+  slug,
+  'coverImage': coverImage.asset->url,
+}`)
+
 export const BOOKS_QUERY =
 defineQuery(`*[_type == 'book'] {
   _id,

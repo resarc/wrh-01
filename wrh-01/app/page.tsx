@@ -1,22 +1,18 @@
+import type { BookType } from '@/types'
 import Image from "next/image"
 import Column from './components/Column'
 import Label from './components/Label'
+import { HOME_QUERY } from '@/lib/sanity/query'
+import { client } from '@/lib/sanity/client'
 
-export default function Home() {
+export default async function Home() {
+  const homeData:BookType[] = await client.fetch(
+    HOME_QUERY
+  )
+
   return (
     <div className="hidden md:grid min-h-screen font-[family-name:var(--font-geist-sans)] text-wrh-green">
       <main className="grid grid-rows-[max-content_1fr]">
-        {/* Top */}
-        {/* <section className="flex items-center justify-center py-6">
-          <Image
-            className="relative left-[-15px]"
-            src="/logo/WRH_logo.svg"
-            alt="The Wireless House logo"
-            width={129}
-            height={70}
-            priority
-          />
-        </section> */}
         
         {/* Main */}
         <section className="flex h-dvh overflow-y-hidden">
@@ -24,15 +20,15 @@ export default function Home() {
           <Column href="/book/ratchaburi">
             <div className="aspect-[3/4] bg-green-900 h-max w-full">
               <Image
-                src="https://cdn.sanity.io/images/6lbaze29/production/1f4a8389ed5530e2ef0b981a8467baec8c22d49b-1848x2748.jpg"
+                src={homeData[0].coverImage}
                 alt="Ratchaburi"
                 fill
                 priority
               />
             </div>
             <Label>
-              <p>สมุดราชบุรี</p>
-              <p>Ratchaburi Register</p>
+              <p>{homeData[0].title_th}</p>
+              <p>{homeData[0].title}</p>
             </Label>
           </Column>
           {/* Separator */}
@@ -41,15 +37,15 @@ export default function Home() {
           <Column href="/book/souvenir">
             <div className="aspect-[3/4] bg-green-900 h-max w-full">
               <Image
-                src="https://cdn.sanity.io/images/6lbaze29/production/eeeaee9c2541c9c238098989a9d6c0beea9cfe3e-2619x3381.jpg"
+                src={homeData[1].coverImage}
                 alt="Souvenir"
                 fill
                 priority
               />
             </div>
             <Label>
-              <p>ที่ระลึก สยามรัฐพิพิธภัณฑ์ สวนลุมพินี พระพุทธศักราช 2468</p>
-              <p>The Souvenir of the Siamese Kingdom Exhibition at Lumpini Park B.E. 2468</p>
+              <p>{homeData[1].title_th}</p>
+              <p>{homeData[1].title}</p>
             </Label>
           </Column>
         </section>
